@@ -7,6 +7,7 @@ from speech_utils import give_feedback
 
 # Configuration
 VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/videos/BackhandP2.MOV"
+VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/rear_videos/IMG_7595.MOV"
 MODEL_PATH = "tennis_rnn.keras"
 MODEL_FEEDBACK_PATH = "tennis_rnn.keras"
 LEFT_HANDED = False
@@ -155,6 +156,7 @@ while cap.isOpened():
         shot_counter.update(probs_shot)
 
         predicted_shot = np.argmax(probs_shot)
+        print("predicted shot:", predicted_shot)
         predicted_feedback = np.argmax(probs_feedback)
         features_pool.pop(0)
 
@@ -174,10 +176,10 @@ while cap.isOpened():
                 shot_text = shot_labels_feedback[predicted_feedback]
                 feedback_options = shot_labels_human_feedback.get(shot_text, "")
                 friendly_text = random.choice(feedback_options)
-                print(f"Feedback given: {shot_text}")
+                #print(f"Feedback given: {shot_text}")
                 cv2.putText(frame, shot_text.upper(), (int(x_min), int(y_min) - 30),
                             cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 0), 3, cv2.LINE_AA)
-                if friendly_text:
+                if friendly_text and predicted_shot != 2:
                     give_feedback(friendly_text)
     
     # Display shot counters
