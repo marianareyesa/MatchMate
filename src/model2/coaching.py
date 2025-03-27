@@ -93,6 +93,36 @@ shot_labels_feedback = [
     "follow through", "bend knees and finish up", "bend knees", "racket up",
     "follow through", "perfect", "neutral", "perfect"
 ]
+import random  # Add this to the top of your script
+
+shot_labels_human_feedback = {
+    "follow through": [
+        "Nice job, but remember to finish your swing.",
+        "Complete that follow through for more control.",
+        "Try not to stop the motion early—follow through fully."
+    ],
+    "bend knees and finish up": [
+        "Bend your knees and follow through strong.",
+        "Great, now lower your stance and finish up.",
+        "Get into the shot by bending your knees and finishing high."
+    ],
+    "bend knees": [
+        "Lower your stance—bend your knees more.",
+        "Keep your knees bent to stay balanced.",
+        "Try bending your knees to generate more power."
+    ],
+    "racket up": [
+        "Prepare early—get your racket up.",
+        "Raise your racket sooner to be ready.",
+        "Get your racket into position for the next shot."
+    ],
+    "perfect": [
+        "That was perfect—keep it up!",
+        "Excellent form!",
+        "Beautiful shot!"
+    ],
+    "neutral": [""]
+}
 
 # Video processing
 cap = cv2.VideoCapture(VIDEO_PATH)
@@ -142,10 +172,13 @@ while cap.isOpened():
 
             if predicted_feedback != 6:
                 shot_text = shot_labels_feedback[predicted_feedback]
+                feedback_options = shot_labels_human_feedback.get(shot_text, "")
+                friendly_text = random.choice(feedback_options)
                 print(f"Feedback given: {shot_text}")
                 cv2.putText(frame, shot_text.upper(), (int(x_min), int(y_min) - 30),
                             cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 0), 3, cv2.LINE_AA)
-                give_feedback(shot_text)
+                if friendly_text:
+                    give_feedback(friendly_text)
     
     # Display shot counters
     shot_counter.display(frame)
