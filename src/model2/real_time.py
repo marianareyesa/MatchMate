@@ -8,11 +8,13 @@ from tensorflow import keras
 #VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/videos/tennis_rally2.mov"
 #VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/videos/ForehandP_9974.MOV"
 VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/videos/BackhandP2.MOV"
+#VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/videos/ForehandR_9993.MOV"
 
 MODEL_PATH = "tennis_rnn.keras"
-MODEL_FEEDBACK_PATH = ""
+MODEL_FEEDBACK_PATH = "tennis_rnn.keras"
 LEFT_HANDED = False
 OUTPUT_FRAMES_PATH = "output_frames"
+OUTPUT_FRAMES_PATH_FEEDBACK = "output_frames_labels"
 
 # Initialize Mediapipe
 mp_pose = mp.solutions.pose
@@ -21,6 +23,7 @@ pose = mp_pose.Pose(static_image_mode=False, min_detection_confidence=0.5, min_t
 
 # Load the trained model
 model = keras.models.load_model(MODEL_PATH)
+model_feedback = keras.models.load_model(MODEL_FEEDBACK_PATH)
 
 # ShotCounter class
 class ShotCounter:
@@ -112,6 +115,11 @@ predicted_shot = 2  # default neutral
 probs = [0, 0, 1, 0]  # default neutral (probability 100%)
 shot_labels = ["forehand", "backhand", "neutral", "serve"]
 
+shot_labels_feedback = ["follow_through", "bend_knees_finish_up", "bend_knees","racket_up", "follow_through", "perfect","neutral", "perfect"]
+predicted_feedback = 6  # default to neutral
+probs_feedback = [0]*len(shot_labels_feedback)
+probs_feedback[predicted_feedback] = 1
+
 while cap.isOpened():
     ret, frame = cap.read()
     if not ret:
@@ -125,10 +133,16 @@ while cap.isOpened():
 
     if len(features_pool) == NB_IMAGES:
         features_seq = np.array(features_pool).reshape(1, NB_IMAGES, 26)
+        features_seq_feedback = np.array(features_pool).reshape(1, NB_IMAGES, 26).astype(np.float32)
+
         probs = model.predict(features_seq, verbose=0)[0]
+        probs_feedback = model_feedback.predict(features_seq_feedback, verbose=0)[0]
+
         shot_counter.update(probs)
         features_pool.pop(0)
+
         predicted_shot = np.argmax(probs)
+        predicted_feedback = np.argmax(probs_feedback)
 
     # Draw landmarks
     mp_drawing.draw_landmarks(frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
@@ -143,6 +157,12 @@ while cap.isOpened():
             x_max = max([lm.x for lm in visible_landmarks]) * w
             y_min = min([lm.y for lm in visible_landmarks]) * h
             y_max = max([lm.y for lm in visible_landmarks]) * h
+
+            if predicted_feedback != 6:
+                shot_text = shot_labels_feedback[predicted_feedback]
+                print(f"Feedback given: {shot_text}")
+                cv2.putText(frame, shot_text.upper(), (int(x_min), int(y_min) - 30),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 0, 0), 3, cv2.LINE_AA)
 
             # Draw bounding box
             #cv2.rectangle(frame, (int(x_min)-20, int(y_min)-20), (int(x_max)+20, int(y_max)+20),
