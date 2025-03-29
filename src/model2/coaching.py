@@ -4,6 +4,7 @@ import mediapipe as mp
 import tensorflow as tf
 from tensorflow import keras
 from speech_utils import give_feedback
+from datetime import datetime
 
 # Configuration
 #VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/videos/BackhandP2.MOV"
@@ -12,8 +13,8 @@ from speech_utils import give_feedback
 #VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/rear_videos/alcaraz.mov"
 VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/IMG_0450.MOV"
 #VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/IMG_0451.MOV"
-MODEL_PATH = "tennis_rnn.keras"
-MODEL_FEEDBACK_PATH = "tennis_rnn.keras"
+MODEL_PATH = "models/tennis_rnn.keras"
+MODEL_FEEDBACK_PATH = "models/tennis_rnn.keras"
 LEFT_HANDED = False
 OUTPUT_FRAMES_PATH = "output_frames"
 
@@ -223,17 +224,21 @@ for label, count in feedback_stats.items():
     if label != "neutral":
         print(f"{label}: {count} time(s)")
 
-with open("feedback_report.txt", "w") as f:
+# Create a timestamped filename
+timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+report_filename = f"reports/feedback_report_{timestamp}.txt"
+
+with open(report_filename, "w") as f:
     f.write("🎾 MatchMate Feedback Report 🎾\n\n")
     
-    f.write("Shot Counts:\n")
+    f.write("🔹 Shot Counts:\n")
     f.write(f"Forehands: {shot_counter.nb_backhands}\n")
     f.write(f"Backhands: {shot_counter.nb_forehands}\n")
     f.write(f"Serves: {shot_counter.nb_serves}\n\n")
 
-    f.write("Feedback Summary:\n")
+    f.write("🔹 Feedback Summary:\n")
     for label, count in feedback_stats.items():
         if label != "neutral":
             f.write(f"{label}: {count} time(s)\n")
 
-print("\nFeedback report saved to feedback_report.txt")
+print(f"\nFeedback report saved to {report_filename} ✅")
