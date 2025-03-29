@@ -6,8 +6,12 @@ from tensorflow import keras
 from speech_utils import give_feedback
 
 # Configuration
-VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/videos/BackhandP2.MOV"
-VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/rear_videos/IMG_7595.MOV"
+#VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/videos/BackhandP2.MOV"
+#VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/videos/ForehandP_9974.MOV"
+#VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/rear_videos/IMG_7595.MOV"
+#VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/rear_videos/alcaraz.mov"
+VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/IMG_0450.MOV"
+#VIDEO_PATH = "/Users/marianareyes/Desktop/MatchMate/MatchMate/dataset/IMG_0451.MOV"
 MODEL_PATH = "tennis_rnn.keras"
 MODEL_FEEDBACK_PATH = "tennis_rnn.keras"
 LEFT_HANDED = False
@@ -136,6 +140,7 @@ probs_shot = [0, 0, 1, 0]
 probs_feedback = [0]*len(shot_labels_feedback)
 probs_feedback[predicted_feedback] = 1
 shot_counter = ShotCounter()
+feedback_stats = {label: 0 for label in shot_labels_human_feedback.keys()}
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -180,6 +185,7 @@ while cap.isOpened():
                 cv2.putText(frame, shot_text.upper(), (int(x_min), int(y_min) - 30),
                             cv2.FONT_HERSHEY_SIMPLEX, 1.2, (255, 255, 0), 3, cv2.LINE_AA)
                 if friendly_text and predicted_shot != 2:
+                    feedback_stats[shot_text] += 1
                     give_feedback(friendly_text)
     
     # Display shot counters
@@ -206,10 +212,28 @@ while cap.isOpened():
 cap.release()
 pose.close()
 cv2.destroyAllWindows()
-print("DONE")
 
-print("Final counts:")
+print("\nFinal counts:")
 print(f"Forehands: {shot_counter.nb_backhands}")
 print(f"Backhands: {shot_counter.nb_forehands}")
 print(f"Serves: {shot_counter.nb_serves}")
 
+print("\nFeedback Summary:")
+for label, count in feedback_stats.items():
+    if label != "neutral":
+        print(f"{label}: {count} time(s)")
+
+with open("feedback_report.txt", "w") as f:
+    f.write("🎾 MatchMate Feedback Report 🎾\n\n")
+    
+    f.write("Shot Counts:\n")
+    f.write(f"Forehands: {shot_counter.nb_backhands}\n")
+    f.write(f"Backhands: {shot_counter.nb_forehands}\n")
+    f.write(f"Serves: {shot_counter.nb_serves}\n\n")
+
+    f.write("Feedback Summary:\n")
+    for label, count in feedback_stats.items():
+        if label != "neutral":
+            f.write(f"{label}: {count} time(s)\n")
+
+print("\nFeedback report saved to feedback_report.txt")
